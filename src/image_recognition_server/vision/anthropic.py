@@ -26,7 +26,8 @@ class AnthropicVision:
     def describe_image(
         self,
         image: str,
-        prompt: str = "Please describe this image in detail.",
+        # Configurable default via DEFAULT_IMAGE_PROMPT env var
+        prompt: str = os.getenv("DEFAULT_IMAGE_PROMPT", "Please describe this image in detail."),
         mime_type="image/png",
     ) -> str:
         """Describe an image using Anthropic's Claude Vision.

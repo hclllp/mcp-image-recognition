@@ -2,19 +2,21 @@ import base64
 import io
 import logging
 import os
+from pathlib import Path
 from typing import Union
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from PIL import Image
 
+# Load environment variables from project root BEFORE local imports
+# so that vision client function defaults can read from os.getenv.
+load_dotenv(dotenv_path=Path(__file__).parent.parent.parent / ".env")
+
 from .utils.image import image_to_base64, validate_base64_image
 from .utils.ocr import OCRError, extract_text_from_image
 from .vision.anthropic import AnthropicVision
 from .vision.openai import OpenAIVision
-
-# Load environment variables
-load_dotenv()
 
 # Configure encoding, defaulting to UTF-8
 DEFAULT_ENCODING = "utf-8"
@@ -44,11 +46,9 @@ def sanitize_output(text: str) -> str:
         return text  # Return original text if sanitization fails
 
 
-# Create MCP server
-mcp = FastMCP(
-    "mcp-image-recognition",
-    description="MCP server for image recognition using Anthropic and OpenAI vision APIs",
-)
+# Create MCP server — FastMCP auto-derives tool descriptions from
+# function docstrings, so no explicit description parameter is needed.
+mcp = FastMCP("mcp-image-recognition")
 
 
 # Initialize vision clients
@@ -126,7 +126,9 @@ async def process_image_with_ocr(image_data: str, prompt: str) -> str:
 
 @mcp.tool()
 async def describe_image(
-    image: str, prompt: str = "Please describe this image in detail."
+    image: str,
+    # Configurable default prompt via DEFAULT_IMAGE_PROMPT env var
+    prompt: str = os.getenv("DEFAULT_IMAGE_PROMPT", "Please describe this image in detail."),
 ) -> str:
     """Describe the contents of an image using vision AI.
 
@@ -161,7 +163,9 @@ async def describe_image(
 
 @mcp.tool()
 async def describe_image_from_file(
-    filepath: str, prompt: str = "Please describe this image in detail."
+    filepath: str,
+    # Configurable default prompt via DEFAULT_IMAGE_PROMPT env var
+    prompt: str = os.getenv("DEFAULT_IMAGE_PROMPT", "Please describe this image in detail."),
 ) -> str:
     """Describe the contents of an image file using vision AI.
 
