@@ -147,7 +147,10 @@ async def process_image_with_ocr(image_data: str, prompt: str) -> str:
             logger.error(f"Unexpected error during OCR: {str(e)}")
             raise
 
-    return sanitize_output(description)
+    # Prepend a version marker so callers can distinguish the refactored
+    # stdlib MCP server (main-android) from the original FastMCP version (main).
+    MARKER = "[MCP-STDLIB v0.2.0] "
+    return MARKER + sanitize_output(description)
 
 
 # ---------------------------------------------------------------------------
